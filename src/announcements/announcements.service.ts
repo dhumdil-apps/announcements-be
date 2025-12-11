@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Announcement } from './announcement.entity';
+import { AnnouncementsGateway } from './announcements.gateway';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 
@@ -45,6 +46,7 @@ export class AnnouncementsService implements OnModuleInit {
   constructor(
     @InjectRepository(Announcement)
     private announcementsRepository: Repository<Announcement>,
+    private announcementsGateway: AnnouncementsGateway,
   ) {}
 
   async onModuleInit() {
@@ -54,8 +56,30 @@ export class AnnouncementsService implements OnModuleInit {
     }
   }
 
-  async findAll(): Promise<Announcement[]> {
-    return this.announcementsRepository.find();
+  async findAll(
+    categories?: string[],
+    search?: string,
+  ): Promise<Announcement[]> {
+    const query =
+      this.announcementsRepository.createQueryBuilder('announcement');
+
+    if (search) {
+      const searchTerm = `%${search}%`;
+      query.where(
+        'LOWER(announcement.title) LIKE LOWER(:search) OR LOWER(announcement.content) LIKE LOWER(:search)',
+        { search: searchTerm },
+      );
+    }
+
+    const announcements = await query.getMany();
+
+    if (categories && categories.length > 0) {
+      return announcements.filter((announcement) =>
+        categories.some((cat) => announcement.categories.includes(cat)),
+      );
+    }
+
+    return announcements;
   }
 
   async findOne(id: string): Promise<Announcement> {
@@ -84,7 +108,9 @@ export class AnnouncementsService implements OnModuleInit {
       lastUpdate: now,
       categories: createAnnouncementDto.categories,
     });
-    return this.announcementsRepository.save(announcement);
+    const saved = await this.announcementsRepository.save(announcement);
+    this.announcementsGateway.notifyAnnouncementCreated(saved);
+    return saved;
   }
 
   async update(
@@ -94,7 +120,9 @@ export class AnnouncementsService implements OnModuleInit {
     const announcement = await this.findOne(id);
     const now = new Date().toISOString();
     Object.assign(announcement, updateAnnouncementDto, { lastUpdate: now });
-    return this.announcementsRepository.save(announcement);
+    const saved = await this.announcementsRepository.save(announcement);
+    this.announcementsGateway.notifyAnnouncementUpdated(saved);
+    return saved;
   }
 
   async remove(id: string): Promise<void> {

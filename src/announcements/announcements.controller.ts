@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -18,8 +19,19 @@ export class AnnouncementsController {
   constructor(private readonly announcementsService: AnnouncementsService) {}
 
   @Get()
-  async findAll() {
-    const announcements = await this.announcementsService.findAll();
+  async findAll(
+    @Query('category') category?: string | string[],
+    @Query('search') search?: string,
+  ) {
+    const categories = category
+      ? Array.isArray(category)
+        ? category
+        : [category]
+      : undefined;
+    const announcements = await this.announcementsService.findAll(
+      categories,
+      search,
+    );
     return { data: announcements.map((a) => ({ ...a, id: String(a.id) })) };
   }
 

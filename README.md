@@ -6,6 +6,7 @@ A REST API for managing city announcements built with NestJS and SQLite.
 
 - NestJS 11 + TypeScript
 - TypeORM + SQLite (persistent storage)
+- Socket.IO (real-time notifications)
 
 ## API Endpoints
 
@@ -27,7 +28,46 @@ Base URL: `/api`
 | PUT    | `/announcements/:id` | Update announcement     |
 | DELETE | `/announcements/:id` | Delete announcement     |
 
-See [API.md](../announcements-fe/API.md) for full API specification.
+#### Query Parameters for GET `/announcements`
+
+| Parameter  | Type               | Description                                      |
+| ---------- | ------------------ | ------------------------------------------------ |
+| `category` | string or string[] | Filter by category ID(s). Multiple values use OR |
+| `search`   | string             | Case-insensitive search in title and content     |
+
+**Examples:**
+- `GET /announcements?category=1` - Filter by single category
+- `GET /announcements?category=1&category=5` - Filter by multiple categories (OR)
+- `GET /announcements?search=library` - Search in title and content
+- `GET /announcements?search=park&category=1` - Combine search with category filter
+
+See [API.md](./API.md) for full API specification.
+
+## WebSocket Events
+
+The server emits real-time events via Socket.IO when announcements change.
+
+**Connection:** `ws://localhost:3000`
+
+| Event                   | Payload                | Description                  |
+| ----------------------- | ---------------------- | ---------------------------- |
+| `announcement:created`  | `Announcement` object  | New announcement created     |
+| `announcement:updated`  | `Announcement` object  | Announcement was updated     |
+
+**Frontend example:**
+```typescript
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:3000');
+
+socket.on('announcement:created', (announcement) => {
+  console.log('New announcement:', announcement);
+});
+
+socket.on('announcement:updated', (announcement) => {
+  console.log('Updated announcement:', announcement);
+});
+```
 
 ## Project Structure
 
@@ -39,6 +79,7 @@ src/
       update-announcement.dto.ts
     announcement.entity.ts      # TypeORM entity
     announcements.controller.ts
+    announcements.gateway.ts    # WebSocket gateway
     announcements.module.ts
     announcements.service.ts
   categories/
@@ -93,3 +134,7 @@ npm run dev
 ```
 
 The frontend will connect to the backend API at `http://localhost:3000/api`.
+
+## TODOs:
+
+- [ ] SQLite FTS5 (Full-Text Search)
