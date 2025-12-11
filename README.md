@@ -93,11 +93,26 @@ data/
   announcements.db              # SQLite database (auto-created)
 ```
 
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure as needed:
+
+```bash
+cp .env.example .env
+```
+
+| Variable        | Default                  | Description                          |
+| --------------- | ------------------------ | ------------------------------------ |
+| `PORT`          | `3000`                   | Server port                          |
+| `CORS_ORIGIN`   | `*`                      | Allowed CORS origin(s)               |
+| `DATABASE_PATH` | `data/announcements.db`  | SQLite database file path            |
+| `DATABASE_SYNC` | `true`                   | Auto-sync schema (disable in prod)   |
+
 ## Database
 
-- SQLite database stored at `data/announcements.db`
+- SQLite database stored at `data/announcements.db` (configurable via `DATABASE_PATH`)
 - Auto-created on first run with seed data
-- Schema synchronized automatically via TypeORM
+- Schema synchronized automatically via TypeORM (disable `DATABASE_SYNC` in production)
 
 ## Scripts
 
@@ -138,3 +153,4 @@ The frontend will connect to the backend API at `http://localhost:3000/api`.
 ## TODOs:
 
 - [ ] SQLite FTS5 (Full-Text Search)
+- [ ] Add tests

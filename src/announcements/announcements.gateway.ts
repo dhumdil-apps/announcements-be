@@ -4,12 +4,13 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
+import { ConfigService } from '@nestjs/config';
 import { Server, Socket } from 'socket.io';
 import { Announcement } from './announcement.entity';
 
 @WebSocketGateway({
   cors: {
-    origin: '*',
+    origin: process.env.CORS_ORIGIN || '*',
   },
 })
 export class AnnouncementsGateway
@@ -17,6 +18,8 @@ export class AnnouncementsGateway
 {
   @WebSocketServer()
   server: Server;
+
+  constructor(private configService: ConfigService) {}
 
   handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
