@@ -3,8 +3,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { CategoriesModule } from './categories/categories.module';
-import { Announcement } from './announcements/announcement.entity';
-import { Category } from './categories/category.entity';
 
 @Module({
   imports: [
@@ -17,7 +15,7 @@ import { Category } from './categories/category.entity';
       useFactory: (configService: ConfigService) => ({
         type: 'sqlite',
         database: configService.get('DATABASE_PATH', 'data/announcements.db'),
-        entities: [Announcement, Category],
+        autoLoadEntities: true,
         synchronize: configService.get('DATABASE_SYNC', 'true') === 'true',
       }),
     }),
