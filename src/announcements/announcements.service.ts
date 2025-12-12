@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Announcement } from './announcement.entity';
@@ -7,7 +12,8 @@ import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 
 @Injectable()
-export class AnnouncementsService implements OnModuleInit {
+export class AnnouncementsService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(AnnouncementsService.name);
   private readonly defaultAnnouncements = [
     {
       title: 'City Hall Holiday Hours',
@@ -49,10 +55,15 @@ export class AnnouncementsService implements OnModuleInit {
     private announcementsGateway: AnnouncementsGateway,
   ) {}
 
-  async onModuleInit() {
-    const count = await this.announcementsRepository.count();
-    if (count === 0) {
-      await this.announcementsRepository.save(this.defaultAnnouncements);
+  async onApplicationBootstrap() {
+    try {
+      const count = await this.announcementsRepository.count();
+      if (count === 0) {
+        await this.announcementsRepository.save(this.defaultAnnouncements);
+        this.logger.log('Seeded default announcements');
+      }
+    } catch (error) {
+      this.logger.error('Failed to seed announcements', error);
     }
   }
 

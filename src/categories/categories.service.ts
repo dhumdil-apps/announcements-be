@@ -1,10 +1,11 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './category.entity';
 
 @Injectable()
-export class CategoriesService implements OnModuleInit {
+export class CategoriesService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(CategoriesService.name);
   private readonly defaultCategories = [
     { label: 'Community events' },
     { label: 'Crime & Safety' },
@@ -21,10 +22,15 @@ export class CategoriesService implements OnModuleInit {
     private categoriesRepository: Repository<Category>,
   ) {}
 
-  async onModuleInit() {
-    const count = await this.categoriesRepository.count();
-    if (count === 0) {
-      await this.categoriesRepository.save(this.defaultCategories);
+  async onApplicationBootstrap() {
+    try {
+      const count = await this.categoriesRepository.count();
+      if (count === 0) {
+        await this.categoriesRepository.save(this.defaultCategories);
+        this.logger.log('Seeded default categories');
+      }
+    } catch (error) {
+      this.logger.error('Failed to seed categories', error);
     }
   }
 
