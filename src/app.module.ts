@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AnnouncementsModule } from './announcements/announcements.module';
@@ -12,12 +12,26 @@ import { CategoriesModule } from './categories/categories.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'sqlite',
-        database: configService.get('DATABASE_PATH', 'data/announcements.db'),
-        autoLoadEntities: true,
-        synchronize: configService.get('DATABASE_SYNC', 'true') === 'true',
-      }),
+      useFactory: (configService: ConfigService) => {
+        const logger = new Logger('TypeORM');
+        const dbPath = configService.get(
+          'DATABASE_PATH',
+          'data/announcements.db',
+        );
+        const syncValue = configService.get('DATABASE_SYNC');
+        const synchronize = syncValue === 'false' ? false : true;
+
+        logger.log(`Database path: ${dbPath}`);
+        logger.log(`DATABASE_SYNC env value: ${syncValue}`);
+        logger.log(`Synchronize: ${synchronize}`);
+
+        return {
+          type: 'sqlite',
+          database: dbPath,
+          autoLoadEntities: true,
+          synchronize,
+        };
+      },
     }),
     AnnouncementsModule,
     CategoriesModule,
