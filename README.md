@@ -150,6 +150,26 @@ npm run dev
 
 The frontend will connect to the backend API at `http://localhost:3000/api`.
 
+## Docker
+
+```bash
+# Build image
+docker build -t announcements-be .
+
+# Run container
+docker run -p 3000:3000 announcements-be
+
+# Run with persistent data
+docker run -p 3000:3000 -v $(pwd)/data:/app/data announcements-be
+
+# Run with custom environment
+docker run -p 3000:3000 \
+  -e CORS_ORIGIN=https://example.com \
+  -e DATABASE_SYNC=false \
+  -v $(pwd)/data:/app/data \
+  announcements-be
+```
+
 ## TODOs:
 
 - [ ] SQLite FTS5 (Full-Text Search)
