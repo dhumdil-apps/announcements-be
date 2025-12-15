@@ -12,6 +12,12 @@ A REST API for managing city announcements built with NestJS and SQLite.
 
 Base URL: `/api`
 
+### Health Check
+
+| Method | Endpoint | Description                              |
+| ------ | -------- | ---------------------------------------- |
+| GET    | `/`      | Health check endpoint (returns `200 OK`) |
+
 ### Categories
 
 | Method | Endpoint      | Description         |
