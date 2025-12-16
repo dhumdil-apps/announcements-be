@@ -1,11 +1,15 @@
 import { NestFactory } from '@nestjs/core';
-import { RequestMethod } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { HealthController } from './health.controller';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api', {
-    exclude: [{ path: '/', method: RequestMethod.GET }],
+  app.setGlobalPrefix('api');
+
+  // Register health endpoint outside of global prefix
+  const healthController = app.get(HealthController);
+  app.getHttpAdapter().get('/', (req, res) => {
+    res.json(healthController.getHealth());
   });
   app.enableCors({
     origin: process.env.CORS_ORIGIN || '*',
